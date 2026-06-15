@@ -159,6 +159,31 @@ export function addEntry(storyId, { content, author }) {
   return { success: true, story: formatStoryDetail(story) };
 }
 
+export function updateStory(storyId, { title, firstEntryAuthor }) {
+  const data = readData();
+  const story = data.stories[storyId];
+  if (!story) {
+    return { success: false, error: '故事不存在', code: 404 };
+  }
+  if (title !== undefined) {
+    if (!title.trim()) {
+      return { success: false, error: '故事标题不能为空', code: 400 };
+    }
+    story.title = title.trim();
+  }
+  if (firstEntryAuthor !== undefined && story.entries.length > 0) {
+    if (!firstEntryAuthor.trim()) {
+      return { success: false, error: '开篇笔名不能为空', code: 400 };
+    }
+    story.entries[0].author = firstEntryAuthor.trim();
+  }
+  const now = Date.now();
+  story.updatedAt = now;
+  updateStoryStatus(story);
+  writeData(data);
+  return { success: true, story: formatStoryDetail(story) };
+}
+
 export function resetStory(storyId) {
   const data = readData();
   const story = data.stories[storyId];

@@ -6,6 +6,7 @@ import {
   getStoryById,
   addEntry,
   resetStory,
+  updateStory,
   MAX_PARTICIPANTS,
   MAX_CHARS_PER_STORY
 } from './storage.js';
@@ -108,6 +109,23 @@ app.post('/api/admin/stories/:id/reset', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '重置故事失败' });
+  }
+});
+
+app.put('/api/admin/stories/:id', (req, res) => {
+  try {
+    const { title, firstEntryAuthor } = req.body || {};
+    const result = updateStory(req.params.id, { title, firstEntryAuthor });
+    if (!result.success) {
+      return res.status(result.code || 400).json({ error: result.error });
+    }
+    res.json({
+      message: '故事信息已更新',
+      story: result.story
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '更新故事信息失败' });
   }
 });
 

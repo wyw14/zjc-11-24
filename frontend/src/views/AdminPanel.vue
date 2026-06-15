@@ -5,7 +5,7 @@
         <div class="admin-header-inner">
           <div>
             <h1>🛠️ 故事管理中心</h1>
-            <p class="admin-subtitle">管理所有社区微小说，支持重置故事内容</p>
+            <p class="admin-subtitle">管理所有社区微小说，支持编辑故事信息和重置故事内容</p>
           </div>
           <button class="btn-secondary" @click="loadStories">
             🔄 刷新列表
@@ -75,6 +75,10 @@
                         @click="viewStory(s.id)"
                       >查看</button>
                       <button
+                        class="btn-primary btn-sm"
+                        @click="openEdit(s)"
+                      >编辑</button>
+                      <button
                         class="btn-danger btn-sm"
                         :disabled="resetting === s.id || s.entryCount <= 1"
                         @click="askReset(s)"
@@ -138,6 +142,54 @@
       </div>
     </div>
 
+    <div
+      v-if="editVisible"
+      class="modal-mask"
+      @click.self="editVisible = false"
+    >
+      <div class="modal card edit-modal">
+        <div class="modal-header">
+          <h3>✏️ 编辑故事信息</h3>
+          <button class="close-btn" @click="editVisible = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>故事标题</label>
+            <input
+              v-model="editForm.title"
+              placeholder="请输入故事标题..."
+              maxlength="50"
+            />
+          </div>
+          <div class="form-group">
+            <label>开篇笔名</label>
+            <input
+              v-model="editForm.firstEntryAuthor"
+              placeholder="请输入开篇作者笔名..."
+              maxlength="20"
+            />
+          </div>
+          <div v-if="editError" class="error-text">{{ editError }}</div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn-secondary"
+            :disabled="editing"
+            @click="editVisible = false"
+          >
+            取消
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="editing || !canSaveEdit"
+            @click="doEdit"
+          >
+            {{ editing ? '保存中...' : '保存修改' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="toast.show" :class="['toast', toast.type]">
       {{ toast.message }}
     </div>
@@ -145,7 +197,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../api.js'
 import { formatTime } from '../utils.js'
@@ -157,6 +209,16 @@ const resetting = ref(null)
 const resetError = ref('')
 const confirmVisible = ref(false)
 const targetStory = ref(null)
+
+const editVisible = ref(false)
+const editing = ref(false)
+const editError = ref('')
+const editForm = ref({ title: '', firstEntryAuthor: '' })
+const editingStoryId = ref(null)
+
+const canSaveEdit = computed(() => {
+  return editForm.value.title.trim() && editForm.value.firstEntryAuthor.trim()
+})
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
@@ -199,6 +261,44 @@ async function doReset() {
     resetError.value = e.message
   } finally {
     resetting.value = null
+  }
+}
+
+async function openEdit(story) {
+  editingStoryId.value = story.id
+  editError.value = ''
+  editForm.value = {
+    title: story.title,
+    firstEntryAuthor: ''
+  }
+  try {
+    const detail = await api.getStory(story.id)
+    if (detail.entries && detail.entries.length > 0) {
+      editForm.value.firstEntryAuthor = detail.entries[0].author
+    }
+    editVisible.value = true
+  } catch (e) {
+    showToast('获取故事详情失败：' + e.message, 'error')
+  }
+}
+
+async function doEdit() {
+  if (!editingStoryId.value) return
+  if (!canSaveEdit.value) return
+  editError.value = ''
+  editing.value = true
+  try {
+    await api.updateStory(editingStoryId.value, {
+      title: editForm.value.title.trim(),
+      firstEntryAuthor: editForm.value.firstEntryAuthor.trim()
+    })
+    editVisible.value = false
+    showToast('故事信息已更新')
+    await loadStories()
+  } catch (e) {
+    editError.value = e.message
+  } finally {
+    editing.value = false
   }
 }
 
@@ -354,6 +454,21 @@ onMounted(loadStories)
 
 .confirm-modal {
   animation: zoomIn 0.2s ease;
+}
+
+.edit-modal {
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes zoomIn {
