@@ -104,6 +104,7 @@ export function getAllStories() {
     .map(s => ({
       id: s.id,
       title: s.title,
+      firstEntryAuthor: s.entries.length > 0 ? s.entries[0].author : null,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
       entryCount: s.entries.length,

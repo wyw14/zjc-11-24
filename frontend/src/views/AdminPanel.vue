@@ -27,6 +27,7 @@
               <thead>
                 <tr>
                   <th>故事标题</th>
+                  <th>开篇作者</th>
                   <th class="num-col">参与人数</th>
                   <th class="num-col">段数</th>
                   <th class="num-col">字数</th>
@@ -42,6 +43,9 @@
                       <span class="story-name">{{ s.title }}</span>
                     </router-link>
                     <span class="story-id">#{{ s.id.slice(0, 8) }}</span>
+                  </td>
+                  <td>
+                    <span class="author-tag">{{ s.firstEntryAuthor || '-' }}</span>
                   </td>
                   <td class="num-col">
                     <span
@@ -399,6 +403,16 @@ onMounted(loadStories)
   font-size: 11px;
   color: var(--text-light);
   font-family: monospace;
+}
+
+.author-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .num-val {

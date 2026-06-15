@@ -54,6 +54,10 @@
                 :class="['tag', s.locked ? 'tag-success' : 'tag-warning']"
               >{{ s.locked ? '已完结' : '接龙中' }}</span>
             </div>
+            <div v-if="s.firstEntryAuthor" class="story-author">
+              <span class="author-icon">✍️</span>
+              <span class="author-name">{{ s.firstEntryAuthor }}</span>
+            </div>
             <div class="story-card-body">
               <div class="story-meta">
                 <span class="meta-item">
@@ -302,13 +306,27 @@ onMounted(loadData)
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .story-title {
   font-size: 17px;
   font-weight: 600;
   line-height: 1.4;
+}
+
+.story-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.story-author .author-name {
+  color: var(--primary);
+  font-weight: 500;
 }
 
 .story-meta {
